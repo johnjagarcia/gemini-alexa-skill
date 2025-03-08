@@ -8,6 +8,9 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 const app = express();
 
 const GEMINI_API_KEY = process.env.GEMINI_API_KEY;
+const GEMINI_MODEL = process.env.GEMINI_MODEL;
+const GEMINI_MAX_OUTPUT_TOKENS = process.env.GEMINI_MAX_OUTPUT_TOKENS;
+const GEMINI_TEMPERATURE = process.env.GEMINI_TEMPERATURE;
 
 const LaunchRequestHandler = {
   canHandle(handlerInput) {
@@ -18,7 +21,7 @@ const LaunchRequestHandler = {
   handle(handlerInput) {
     return handlerInput.responseBuilder
       .speak(
-        "¡Hola! Bienvenido a tu skill con integración de Gemini. Dime qué quieres preguntar."
+        "¡Hola! Bienvenido a tu skill con integración de Voz Inteligente. Dime qué quieres preguntar."
       )
       .reprompt("¿Cómo puedo ayudarte?")
       .getResponse();
@@ -45,16 +48,31 @@ const GeminiIntentHandler = {
     try {
       const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
 
-      const model = genAI.getGenerativeModel({ model: "gemini-1.5-flash" });
+      const model = genAI.getGenerativeModel({ model: GEMINI_MODEL });
 
-      const result = await model.generateContent(message);
+      const result = await model.generateContent({
+        contents: [
+          {
+            role: "user",
+            parts: [
+              {
+                text: message,
+              },
+            ],
+          },
+        ],
+        generationConfig: {
+          maxOutputTokens: +GEMINI_MAX_OUTPUT_TOKENS,
+          temperature: +GEMINI_TEMPERATURE,
+        },
+      });
 
       const answer = result.response.text();
       console.log(answer);
 
       return handlerInput.responseBuilder
         .speak(answer)
-        .reprompt("¿Quieres preguntar algo más?")
+        .reprompt("¿Quieres preguntarle algo más a Voz Inteligente?")
         .getResponse();
     } catch (error) {
       console.error(
@@ -62,7 +80,9 @@ const GeminiIntentHandler = {
         error.response ? error.response.data : error.message
       );
       return handlerInput.responseBuilder
-        .speak("Hubo un problema al consultar Gemini. Intenta más tarde.")
+        .speak(
+          "Hubo un problema al consultar a Voz Inteligente. Intenta más tarde."
+        )
         .getResponse();
     }
   },
