@@ -24,6 +24,7 @@ const LaunchRequestHandler = {
         "¡Hola! Bienvenido a tu skill con integración de Voz Inteligente. Dime qué quieres preguntar."
       )
       .reprompt("¿Cómo puedo ayudarte?")
+      .withShouldEndSession(false) // Mantiene la sesión abierta
       .getResponse();
   },
 };
@@ -73,6 +74,7 @@ const GeminiIntentHandler = {
       return handlerInput.responseBuilder
         .speak(answer)
         .reprompt("¿Quieres preguntarle algo más a Voz Inteligente?")
+        .withShouldEndSession(false) // Mantiene la sesión activa
         .getResponse();
     } catch (error) {
       console.error(
@@ -85,6 +87,31 @@ const GeminiIntentHandler = {
         )
         .getResponse();
     }
+  },
+  canFulfillIntent(handlerInput) {
+    return {
+      canFulfill: "YES",
+      slots: {},
+    };
+  },
+};
+
+const StopIntentHandler = {
+  canHandle(handlerInput) {
+    return (
+      Alexa.getRequestType(handlerInput.requestEnvelope) === "IntentRequest" &&
+      (Alexa.getIntentName(handlerInput.requestEnvelope) ===
+        "AMAZON.StopIntent" ||
+        Alexa.getIntentName(handlerInput.requestEnvelope) ===
+          "AMAZON.CancelIntent")
+    );
+  },
+  handle(handlerInput) {
+    return handlerInput.responseBuilder
+      .speak("Entendido...")
+      .reprompt("¿Necesitas algo más?") // Deja la sesión abierta
+      .withShouldEndSession(false)
+      .getResponse();
   },
 };
 
@@ -101,7 +128,11 @@ const ErrorHandler = {
 };
 
 const skill = Alexa.SkillBuilders.custom()
-  .addRequestHandlers(LaunchRequestHandler, GeminiIntentHandler)
+  .addRequestHandlers(
+    LaunchRequestHandler,
+    GeminiIntentHandler,
+    StopIntentHandler
+  )
   .addErrorHandlers(ErrorHandler)
   .create();
 
