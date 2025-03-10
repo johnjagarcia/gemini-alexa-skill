@@ -24,7 +24,6 @@ const LaunchRequestHandler = {
         "¡Hola! Bienvenido a tu skill con integración de Voz Inteligente. Dime qué quieres preguntar."
       )
       .reprompt("¿Cómo puedo ayudarte?")
-      .withShouldEndSession(false) // Mantiene la sesión abierta
       .getResponse();
   },
 };
@@ -74,7 +73,6 @@ const GeminiIntentHandler = {
       return handlerInput.responseBuilder
         .speak(answer)
         .reprompt("¿Quieres preguntarle algo más a Voz Inteligente?")
-        .withShouldEndSession(false) // Mantiene la sesión activa
         .getResponse();
     } catch (error) {
       console.error(
@@ -87,12 +85,6 @@ const GeminiIntentHandler = {
         )
         .getResponse();
     }
-  },
-  canFulfillIntent(handlerInput) {
-    return {
-      canFulfill: "YES",
-      slots: {},
-    };
   },
 };
 
@@ -107,11 +99,7 @@ const StopIntentHandler = {
     );
   },
   handle(handlerInput) {
-    return handlerInput.responseBuilder
-      .speak("Entendido...")
-      .reprompt("¿Necesitas algo más?") // Deja la sesión abierta
-      .withShouldEndSession(false)
-      .getResponse();
+    return handlerInput.responseBuilder.speak("Entendido...").getResponse();
   },
 };
 
@@ -139,6 +127,7 @@ const skill = Alexa.SkillBuilders.custom()
 const adapter = new ExpressAdapter(skill, false, false);
 
 app.post("/alexa", adapter.getRequestHandlers());
+app.get("", (req, res) => res.send("Hello World!"));
 
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
